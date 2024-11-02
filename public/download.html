@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Photo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="center-container">
+    <h1>Your Photo</h1>
+    <div id="photo-container">
+      <p>Loading your photo...</p>
+    </div>
+    <p id="download-link"></p>
+    <p>Share on:</p>
+    <p id="social-links"></p>
+    <button onclick="window.location.href='/'" class="button">Back to Home</button>
+  </div>
+
+  <script>
+    // Retrieve the photoId from the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const photoId = urlParams.get('photoId');
+
+    // Function to load the photo and display options
+    async function loadPhoto() {
+      const response = await fetch(`/api/photos/${photoId}`);
+      if (response.ok) {
+        const data = await response.json();
+        const photoContainer = document.getElementById('photo-container');
+        const downloadLink = document.getElementById('download-link');
+        const socialLinks = document.getElementById('social-links');
+
+        // Display the processed image
+        photoContainer.innerHTML = `<img src="${data.imagePath}" alt="Processed Photo" style="max-width:80%; border:2px solid #333; margin:20px 0;">`;
+
+        // Display the download link
+        downloadLink.innerHTML = `<a href="${data.imagePath}" download="photo.png">Download</a>`;
+
+        // Display social sharing links
+        socialLinks.innerHTML = `
+          <a href="whatsapp://send?text=Check out my photo! ${data.imagePath}" target="_blank">WhatsApp</a> |
+          <a href="https://www.instagram.com/" target="_blank">Instagram</a>
+        `;
+      } else {
+        document.getElementById('photo-container').innerHTML = '<p>Sorry, your photo is still processing. Please try again later.</p>';
+      }
+    }
+
+    // Load the photo on page load
+    if (photoId) {
+      loadPhoto();
+    } else {
+      document.getElementById('photo-container').innerHTML = '<p>Invalid photo ID.</p>';
+    }
+  </script>
+</body>
+</html>

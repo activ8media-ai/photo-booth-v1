@@ -1,0 +1,19 @@
+{
+  "name": "photo-booth-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "canvas": "^2.11.2",
+    "express": "^4.21.1",
+    "fs": "^0.0.1-security",
+    "multer": "^1.4.5-lts.1",
+    "qrcode": "^1.5.4"
+  }
+}

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Capture Photo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="center-container">
+    <video id="video" autoplay playsinline class="video-frame"></video>
+    <button id="start-camera-btn" class="button">Start Camera</button>
+    <button id="capture-btn" style="display: none;" class="button">Capture Photo</button>
+    <canvas id="canvas" style="display: none;"></canvas>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const startCameraBtn = document.getElementById('start-camera-btn');
+    const captureBtn = document.getElementById('capture-btn');
+
+    // Start the camera and set canvas dimensions based on video dimensions
+    startCameraBtn.addEventListener('click', async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { aspectRatio: 9 / 16 } });
+      video.srcObject = stream;
+
+      startCameraBtn.style.display = 'none';
+      captureBtn.style.display = 'block';
+
+      // Set canvas dimensions based on video stream dimensions after it starts playing
+      video.onloadedmetadata = () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+      };
+    });
+
+    // Capture photo and upload
+    captureBtn.addEventListener('click', async () => {
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/png');
+
+      // Send image to the backend
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageData })
+      });
+
+      const data = await response.json();
+      window.location.href = `qr-code.html?url=${data.qrCodeUrl}`;
+    });
+  </script>
+</body>
+</html>

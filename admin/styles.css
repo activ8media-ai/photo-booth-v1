@@ -1,0 +1,33 @@
+.center-container {
+    max-width: 800px;
+    margin: auto;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  section {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
+  
+  section h2 {
+    color: #333;
+  }
+  
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  ul li {
+    margin-bottom: 10px;
+  }
+  
+  ul li img {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
