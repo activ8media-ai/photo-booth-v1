@@ -90,5 +90,36 @@ body {
     border-radius: 4px;
   }
   
+  .countdown-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 5rem;
+    color: white;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    text-align: center;
+    z-index: 10;
+  }
+  
+  .photo-approval-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 1rem;
+    border-radius: 10px;
+  }
+  
+  .captured-photo {
+    max-width: 80%;
+    margin-bottom: 1rem;
+    border: 2px solid #333;
+  }
   
   

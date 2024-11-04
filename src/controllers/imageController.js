@@ -3,10 +3,34 @@ const path = require('path');
 const QRCode = require('qrcode');
 const { createCanvas, loadImage } = require('canvas');
 
-// Define an in-memory storage to keep track of processed photos
+// In-memory storage to keep track of processed photos
 const photoQueue = {};
 
-// Function to upload image, process it, and generate QR code
+// Helper function to save and process the image with an optional frame overlay
+async function saveProcessedImage(base64Image, photoId) {
+  const buffer = Buffer.from(base64Image.split(',')[1], 'base64');
+  const originalImagePath = `public/images/${photoId}.png`;
+  fs.writeFileSync(originalImagePath, buffer);
+
+  const image = await loadImage(originalImagePath);
+  const canvas = createCanvas(image.width, image.height);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(image, 0, 0, image.width, image.height);
+
+  // Overlay frame if available
+  const framePath = path.join(__dirname, '../../public/frames/frame.png');
+  if (fs.existsSync(framePath)) {  // Check if frame exists
+    const frame = await loadImage(framePath);
+    ctx.drawImage(frame, 0, 0, canvas.width, canvas.height); // Adjusts to fit the canvas size
+  }
+
+  const processedImagePath = `public/processed/${photoId}.png`;
+  fs.writeFileSync(processedImagePath, canvas.toBuffer('image/png'));
+
+  return processedImagePath;
+}
+
+// Function to handle image upload, process it, and generate a QR code
 exports.uploadImage = async (req, res) => {
   const { image } = req.body;
   const photoId = Date.now().toString();
@@ -26,7 +50,7 @@ exports.uploadImage = async (req, res) => {
   }
 };
 
-// Function to get image details for download page
+// Function to retrieve image details for download page
 exports.getImage = (req, res) => {
   const { photoId } = req.params;
   const photo = photoQueue[photoId];
@@ -38,7 +62,7 @@ exports.getImage = (req, res) => {
   }
 };
 
-// Function to get all processed images for the admin panel
+// Function to retrieve all processed images for the admin panel
 exports.getProcessedImages = (req, res) => {
   const images = Object.keys(photoQueue)
     .filter(photoId => photoQueue[photoId].status === 'ready')
@@ -50,7 +74,7 @@ exports.getProcessedImages = (req, res) => {
   res.json(images);
 };
 
-// Function to delete an image
+// Function to delete a processed image
 exports.deleteImage = (req, res) => {
   const { photoId } = req.params;
   const photo = photoQueue[photoId];
@@ -68,23 +92,3 @@ exports.deleteImage = (req, res) => {
     res.status(404).json({ message: 'Image not found.' });
   }
 };
-
-// Helper function to process and save the image
-async function saveProcessedImage(base64Image, photoId) {
-  const buffer = Buffer.from(base64Image.split(',')[1], 'base64');
-  const originalImagePath = `public/images/${photoId}.png`;
-  fs.writeFileSync(originalImagePath, buffer);
-
-  const image = await loadImage(originalImagePath);
-  const canvas = createCanvas(image.width, image.height);
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(image, 0, 0, image.width, image.height);
-  ctx.strokeStyle = 'blue';
-  ctx.lineWidth = 20;
-  ctx.strokeRect(0, 0, image.width, image.height);
-
-  const processedImagePath = `public/processed/${photoId}.png`;
-  fs.writeFileSync(processedImagePath, canvas.toBuffer('image/png'));
-
-  return processedImagePath;
-}

@@ -9,6 +9,7 @@
 <body>
   <div class="center-container">
     <video id="video" autoplay playsinline class="video-frame"></video>
+    <div id="countdown-overlay" class="countdown-overlay" style="display: none;">3</div>
     <button id="start-camera-btn" class="button">Start Camera</button>
     <button id="capture-btn" style="display: none;" class="button">Capture Photo</button>
     <canvas id="canvas" style="display: none;"></canvas>
@@ -19,8 +20,9 @@
     const canvas = document.getElementById('canvas');
     const startCameraBtn = document.getElementById('start-camera-btn');
     const captureBtn = document.getElementById('capture-btn');
+    const countdownOverlay = document.getElementById('countdown-overlay');
 
-    // Start the camera and set canvas dimensions based on video dimensions
+    // Start the camera and show the capture button
     startCameraBtn.addEventListener('click', async () => {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { aspectRatio: 9 / 16 } });
       video.srcObject = stream;
@@ -28,29 +30,75 @@
       startCameraBtn.style.display = 'none';
       captureBtn.style.display = 'block';
 
-      // Set canvas dimensions based on video stream dimensions after it starts playing
       video.onloadedmetadata = () => {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
       };
     });
 
-    // Capture photo and upload
-    captureBtn.addEventListener('click', async () => {
+    // Countdown before capturing photo
+    function startCountdown() {
+      let countdown = 3;
+      countdownOverlay.style.display = 'block';
+      countdownOverlay.innerText = countdown;
+
+      const countdownInterval = setInterval(() => {
+        countdown -= 1;
+        if (countdown === 0) {
+          clearInterval(countdownInterval);
+          countdownOverlay.style.display = 'none';
+          capturePhoto();
+        } else {
+          countdownOverlay.innerText = countdown;
+        }
+      }, 1000);
+    }
+
+    // Capture photo
+    function capturePhoto() {
       const context = canvas.getContext('2d');
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       const imageData = canvas.toDataURL('image/png');
 
-      // Send image to the backend
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: imageData })
+      // Show approval buttons and hide capture button
+      showPhotoApproval(imageData);
+    }
+
+    // Display the captured photo and options to approve or retake
+    function showPhotoApproval(imageData) {
+      const photoContainer = document.createElement('div');
+      photoContainer.className = 'photo-approval-container';
+      photoContainer.innerHTML = `
+        <img src="${imageData}" alt="Captured Photo" class="captured-photo">
+        <button id="approve-btn" class="button">Approve</button>
+        <button id="retake-btn" class="button">Retake</button>
+      `;
+      document.body.appendChild(photoContainer);
+
+      // Approve photo
+      document.getElementById('approve-btn').addEventListener('click', async () => {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: imageData })
+        });
+
+        const data = await response.json();
+        window.location.href = `qr-code.html?url=${data.qrCodeUrl}`;
       });
 
-      const data = await response.json();
-      window.location.href = `qr-code.html?url=${data.qrCodeUrl}`;
-    });
+      // Retake photo
+      document.getElementById('retake-btn').addEventListener('click', () => {
+        photoContainer.remove();
+        captureBtn.style.display = 'block';
+      });
+
+      // Hide the capture button and show approval options
+      captureBtn.style.display = 'none';
+    }
+
+    // Start countdown when capture button is clicked
+    captureBtn.addEventListener('click', startCountdown);
   </script>
 </body>
 </html>
